@@ -3,6 +3,8 @@ import { defineConfig } from 'vite';
 import { leaderboardMiddleware } from './server/leaderboard.mjs';
 
 export default defineConfig({
+  // Relative asset paths: the build works at the domain root and under a sub-path (e.g. /blackbox-viewer/).
+  base: './',
   plugins: [
     {
       name: 'leaderboard-api',

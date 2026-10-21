@@ -11,7 +11,7 @@ import { simulateFlight } from './demo/simulate.ts';
 import { audioEnvelope, correlate, logSignal, throttlePunches } from './sync/audio.ts';
 import type { FlightData, Trick, TrickType, WorkerRequest, WorkerResponse } from './types.ts';
 import { DEFAULT_HUD, Hud, type HudOptions } from './ui/hud.ts';
-import { fetchLeaderboard, submitScore } from './ui/leaderboard.ts';
+import { SubmitRejectedError, fetchAuth, fetchLeaderboard, submitScore, type AuthState } from './ui/leaderboard.ts';
 import { SimView, computeTrack, type Track } from './ui/simview.ts';
 import { Timeline } from './ui/timeline.ts';
 
@@ -512,7 +512,7 @@ function drawSyncCurve(curve: Float32Array, start: number, step: number, best: n
     if (v < mn) mn = v;
     if (v > mx) mx = v;
   }
-  g.strokeStyle = '#7cf3ff';
+  g.strokeStyle = '#58f0a8';
   g.beginPath();
   for (let x = 0; x < w; x++) {
     const k = Math.floor((x / w) * curve.length);
@@ -799,8 +799,24 @@ $('btnRec').addEventListener('click', () => (recorder ? stopRecording() : startR
 // ---------- leaderboard ----------
 const pilotInput = $<HTMLInputElement>('pilotName');
 pilotInput.value = localStorage.getItem('bba.pilot') ?? '';
+// Login requirement for submitting (set by the server, see server/leaderboard.mjs).
+let auth: AuthState = { required: false, loggedIn: true, loginUrl: '' };
+const loginBlocked = () => auth.required && !auth.loggedIn;
+function showAuth() {
+  $('loginHint').hidden = !loginBlocked();
+  $<HTMLAnchorElement>('loginLink').href = auth.loginUrl || '/login';
+  updateSubmit();
+}
+async function refreshAuth() {
+  auth = await fetchAuth();
+  showAuth();
+}
+// Demo flights are synthetic and must not end up in the leaderboard.
+const isDemoFlight = () => state.flight?.info.source === 'demo';
 function updateSubmit() {
-  $<HTMLButtonElement>('btnSubmit').disabled = !state.flight || !pilotInput.value.trim() || !(state.analysis?.tricks.length);
+  $('demoHint').hidden = !isDemoFlight();
+  $<HTMLButtonElement>('btnSubmit').disabled =
+    loginBlocked() || isDemoFlight() || !state.flight || !pilotInput.value.trim() || !(state.analysis?.tricks.length);
 }
 pilotInput.addEventListener('input', () => {
   try {
@@ -814,19 +830,35 @@ $('submitForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = state.flight;
   if (!f || !state.analysis) return;
+  if (f.info.source === 'demo') return toast('Demo-Flüge können nicht eingereicht werden.', 'error');
   const s = summarize(state.analysis.tricks);
-  const res = await submitScore({
-    pilot: pilotInput.value.trim(),
-    score: s.total,
-    tricks: s.count,
-    best: s.best?.name ?? '',
-    maxCombo: s.maxCombo,
-    craft: f.info.craft,
-    duration: f.info.duration,
-  });
-  toast(`Eingereicht – Platz ${res.rank}${res.online ? '' : ' (lokal gespeichert, kein Server erreichbar)'}.`);
+  try {
+    const res = await submitScore({
+      source: f.info.source,
+      pilot: pilotInput.value.trim(),
+      score: s.total,
+      tricks: s.count,
+      best: s.best?.name ?? '',
+      maxCombo: s.maxCombo,
+      craft: f.info.craft,
+      duration: f.info.duration,
+    });
+    toast(`Eingereicht – Platz ${res.rank}${res.online ? '' : ' (lokal gespeichert, kein Server erreichbar)'}.`);
+  } catch (err) {
+    if (!(err instanceof SubmitRejectedError)) throw err;
+    if (err.loginRequired) {
+      // Session expired or logged out in another tab.
+      auth = { required: true, loggedIn: false, loginUrl: err.loginUrl || auth.loginUrl };
+      showAuth();
+    }
+    toast(err.message, 'error');
+    return;
+  }
   refreshBoard();
 });
+// Re-check after returning to the tab, e.g. after logging in in another tab.
+window.addEventListener('focus', () => void refreshAuth());
+void refreshAuth();
 async function refreshBoard() {
   const { entries, online } = await fetchLeaderboard();
   $('boardMode').textContent = online ? 'Online-Leaderboard' : 'Lokales Leaderboard (Server nicht erreichbar)';

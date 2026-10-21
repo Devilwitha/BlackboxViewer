@@ -293,7 +293,7 @@ export class Timeline {
 
     if (this.videoSpan) {
       const x0 = this.t2x(this.videoSpan[0], w), x1 = this.t2x(this.videoSpan[1], w);
-      g.fillStyle = 'rgba(124,243,255,0.5)';
+      g.fillStyle = 'rgba(88,240,168,0.5)';
       g.fillRect(Math.max(0, x0), 18, Math.min(w, x1) - Math.max(0, x0), 3);
     }
     if (this.marker !== null) {
@@ -318,7 +318,7 @@ export class Timeline {
       g.fillText(`${this.hover.toFixed(2)} s`, x + 4, 10);
     }
     const cx = this.t2x(this.cursor, w);
-    g.strokeStyle = '#7cf3ff';
+    g.strokeStyle = '#58f0a8';
     g.lineWidth = 2;
     g.beginPath();
     g.moveTo(cx, 0);

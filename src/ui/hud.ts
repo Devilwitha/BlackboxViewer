@@ -65,14 +65,14 @@ export class Hud {
   private panel(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     ctx.beginPath();
     ctx.roundRect(x, y, w, h, r);
-    ctx.fillStyle = 'rgba(8, 10, 20, 0.55)';
+    ctx.fillStyle = 'rgba(8, 11, 13, 0.55)';
     ctx.fill();
   }
 
   private topLeft(ctx: CanvasRenderingContext2D, s: number, t: number, f: FlightData) {
     const x = 24 * s, y = 24 * s;
     this.panel(ctx, x, y, 210 * s, 58 * s, 10 * s);
-    ctx.fillStyle = '#7cf3ff';
+    ctx.fillStyle = '#58f0a8';
     ctx.font = `700 ${12 * s}px ${FONT}`;
     ctx.fillText('BLACKBOX ARENA', x + 12 * s, y + 20 * s);
     ctx.fillStyle = '#fff';
@@ -99,7 +99,7 @@ export class Hud {
     ctx.fillText('SCORE', x + bw - 16 * s, y + 22 * s);
     ctx.fillStyle = '#fff';
     ctx.font = `800 italic ${46 * s}px ${FONT}`;
-    ctx.shadowColor = 'rgba(124,243,255,0.6)';
+    ctx.shadowColor = 'rgba(88,240,168,0.6)';
     ctx.shadowBlur = 16 * s;
     ctx.fillText(Math.round(this.shownScore).toLocaleString('de-DE'), x + bw - 16 * s, y + 70 * s);
     ctx.shadowBlur = 0;
@@ -135,7 +135,7 @@ export class Hud {
       ctx.font = `700 ${14 * s}px ${FONT}`;
       ctx.fillText(tr.name, x + 54 * s, fy + 20 * s);
       ctx.textAlign = 'right';
-      ctx.fillStyle = '#7cf3ff';
+      ctx.fillStyle = '#58f0a8';
       ctx.fillText(`+${tr.points}`, x + bw - 12 * s, fy + 20 * s);
       ctx.textAlign = 'left';
       fy += 36 * s;
@@ -232,8 +232,8 @@ export class Hud {
       ctx.stroke();
       const px = bx + size / 2 + (sx * (size / 2 - 12 * s));
       const py = y + size / 2 - (sy * (size / 2 - 12 * s));
-      ctx.fillStyle = '#7cf3ff';
-      ctx.shadowColor = '#7cf3ff';
+      ctx.fillStyle = '#58f0a8';
+      ctx.shadowColor = '#58f0a8';
       ctx.shadowBlur = 10 * s;
       ctx.beginPath();
       ctx.arc(px, py, 7 * s, 0, Math.PI * 2);
@@ -309,7 +309,7 @@ export class Hud {
         if (k) ctx.lineTo(p[0], p[1]);
         else ctx.moveTo(p[0], p[1]);
       }
-      ctx.strokeStyle = ax > 0 ? '#ff4d6d' : '#7cf3ff';
+      ctx.strokeStyle = ax > 0 ? '#ff4d6d' : '#58f0a8';
       ctx.lineWidth = 2 * s;
       ctx.stroke();
     }
